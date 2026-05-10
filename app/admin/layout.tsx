@@ -56,15 +56,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         onLogout={logout}
       />
 
-      <div className="md:ml-[250px]">
+      <div className="md:ml-65">
         <Header title={title} onMenuClick={() => setIsSidebarOpen(true)} />
 
         <motion.main
           key={pathname}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className="max-h-[calc(100vh-73px)] overflow-y-auto p-4 md:p-6"
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="min-h-[calc(100vh-65px)] overflow-y-auto p-4 md:p-6"
         >
           <Breadcrumbs />
           {children}

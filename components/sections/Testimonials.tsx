@@ -78,13 +78,34 @@ function QuoteIcon({ className }: { className?: string }) {
 export function Testimonials() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Testimonial[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadTestimonials = async () => {
       try {
+        const localRaw = localStorage.getItem("admin-testimonials");
+        if (localRaw) {
+          const localParsed = JSON.parse(localRaw) as unknown;
+          if (Array.isArray(localParsed) && localParsed.length > 0) {
+            setItems(localParsed as Testimonial[]);
+            setLoading(false);
+            return;
+          }
+        }
+
         const response = await fetch("/api/testimonials");
-        const data = (await response.json()) as Testimonial[];
-        setItems(data);
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+        const data: unknown = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error("Unexpected response format from /api/testimonials");
+        }
+        setItems(data as Testimonial[]);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load testimonials"
+        );
       } finally {
         setLoading(false);
       }
@@ -119,54 +140,66 @@ export function Testimonials() {
         </motion.div>
 
         {/* Cards */}
-        <motion.div
-          className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3"
-          variants={container}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          {(loading ? [] : items).map(
-            ({ _id, quote, name, role, company, avatar, rating }) => (
-              <motion.figure
-                key={_id}
-                variants={card}
-                className="relative flex flex-col justify-between rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
-              >
-                {/* decorative quote mark */}
-                <QuoteIcon className="absolute right-6 top-5 h-8 w-8 text-zinc-100 dark:text-zinc-800" />
+        {error ? (
+          <p className="mx-auto mt-16 max-w-md text-center text-sm text-red-500 dark:text-red-400">
+            {error}
+          </p>
+        ) : loading ? (
+          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-52 animate-pulse rounded-2xl bg-zinc-200 dark:bg-zinc-800"
+              />
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3"
+            variants={container}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+          >
+            {items.map(
+              ({ _id, quote, name, role, company, avatar, rating }) => (
+                <motion.figure
+                  key={_id}
+                  variants={card}
+                  className="relative flex flex-col justify-between rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+                >
+                  {/* decorative quote mark */}
+                  <QuoteIcon className="absolute right-6 top-5 h-8 w-8 text-zinc-100 dark:text-zinc-800" />
 
-                <div className="space-y-4">
-                  <Stars count={rating ?? 5} />
-                  <blockquote className="text-sm leading-7 text-zinc-700 dark:text-zinc-300">
-                    &ldquo;{quote}&rdquo;
-                  </blockquote>
-                </div>
+                  <div className="space-y-4">
+                    <Stars count={rating ?? 5} />
+                    <blockquote className="text-sm leading-7 text-zinc-700 dark:text-zinc-300">
+                      &ldquo;{quote}&rdquo;
+                    </blockquote>
+                  </div>
 
-                <figcaption className="mt-6 flex items-center gap-3">
-                  {/* avatar */}
-                  <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white"
-                    aria-hidden="true"
-                  >
-                    {avatar ?? name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">
-                      {name}
-                    </p>
-                    <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                      {role ?? "Customer"}{company ? ` · ${company}` : ""}
-                    </p>
-                  </div>
-                </figcaption>
-              </motion.figure>
-            )
-          )}
-        </motion.div>
-        {loading ? (
-          <div className="mx-auto mt-8 h-24 max-w-5xl animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800" />
-        ) : null}
+                  <figcaption className="mt-6 flex items-center gap-3">
+                    {/* avatar */}
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white"
+                      aria-hidden="true"
+                    >
+                      {avatar ?? name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">
+                        {name}
+                      </p>
+                      <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                        {role ?? "Customer"}{company ? ` · ${company}` : ""}
+                      </p>
+                    </div>
+                  </figcaption>
+                </motion.figure>
+              )
+            )}
+          </motion.div>
+        )}
 
         {/* Social proof bar */}
         <motion.div

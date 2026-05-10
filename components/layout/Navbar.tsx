@@ -194,6 +194,20 @@ export function Navbar() {
             </AnimatePresence>
           </motion.button>
 
+          {/* Admin Panel — desktop only */}
+          <motion.a
+            href="/admin"
+            className="hidden items-center gap-1.5 rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 md:inline-flex"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Admin
+          </motion.a>
+
           {/* CTA — desktop only */}
           <motion.a
             href="#contact"
@@ -261,6 +275,20 @@ export function Navbar() {
                   className="flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
                 >
                   Get started
+                </a>
+              </motion.li>
+
+              <motion.li variants={mobileItemVariants}>
+                <a
+                  href="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  Access Admin Panel
                 </a>
               </motion.li>
             </ul>

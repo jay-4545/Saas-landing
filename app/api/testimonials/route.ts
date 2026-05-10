@@ -18,8 +18,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await connectDB();
-    const body = await request.json();
-    const { name, role, company, avatar, rating, quote } = body;
+    const body = (await request.json()) as {
+      name?: string;
+      role?: string;
+      company?: string;
+      avatar?: string;
+      rating?: unknown;
+      quote?: string;
+    };
+    const { name, role, company, avatar, quote } = body;
 
     if (!name || !quote) {
       return NextResponse.json(
@@ -28,19 +35,32 @@ export async function POST(request: Request) {
       );
     }
 
+    const ratingNum = Number(body.rating);
+    const safeRating =
+      Number.isFinite(ratingNum) && ratingNum >= 1 && ratingNum <= 5
+        ? ratingNum
+        : 5;
+
     const createdTestimonial = await Testimonial.create({
-      name,
-      role,
-      company,
-      avatar,
-      rating,
-      quote,
+      name: name.trim(),
+      role: role?.trim() || undefined,
+      company: company?.trim() || undefined,
+      avatar: avatar?.trim() || undefined,
+      rating: safeRating,
+      quote: quote.trim(),
     });
 
     return NextResponse.json(createdTestimonial, { status: 201 });
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[POST /api/testimonials]", message);
     return NextResponse.json(
-      { error: "Failed to create testimonial" },
+      {
+        error:
+          process.env.NODE_ENV === "development"
+            ? message
+            : "Failed to create testimonial",
+      },
       { status: 500 }
     );
   }

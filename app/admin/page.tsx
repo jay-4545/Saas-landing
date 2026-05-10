@@ -14,6 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { motion } from "framer-motion";
 import { StatCard } from "@/components/admin/StatCard";
 import { fetchDashboardStats, fetchMessages } from "@/lib/api";
 
@@ -88,14 +89,42 @@ export default function AdminDashboardPage() {
     { label: "Visitors", value: String(stats.totalBlogs * 320), change: "+24%" },
   ];
 
+  const statAccents = [
+    "bg-indigo-500",
+    "bg-violet-500",
+    "bg-amber-500",
+    "bg-emerald-500",
+  ];
+  const statIcons = [
+    <FileText key="ft" size={18} />,
+    <Mail key="mail" size={18} />,
+    <MessageSquareQuote key="msq" size={18} />,
+    <Users key="users" size={18} />,
+  ];
+
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={statCards[0].label} value={statCards[0].value} icon={<FileText size={18} />} change={statCards[0].change} />
-        <StatCard label={statCards[1].label} value={statCards[1].value} icon={<Mail size={18} />} change={statCards[1].change} />
-        <StatCard label={statCards[2].label} value={statCards[2].value} icon={<MessageSquareQuote size={18} />} change={statCards[2].change} />
-        <StatCard label={statCards[3].label} value={statCards[3].value} icon={<Users size={18} />} change={statCards[3].change} />
-      </section>
+      <motion.section
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        initial="hidden"
+        animate="visible"
+        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
+      >
+        {statCards.map((card, i) => (
+          <motion.div
+            key={card.label}
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } } }}
+          >
+            <StatCard
+              label={card.label}
+              value={card.value}
+              icon={statIcons[i]}
+              change={card.change}
+              accent={statAccents[i]}
+            />
+          </motion.div>
+        ))}
+      </motion.section>
 
       <section className="grid gap-4 xl:grid-cols-2">
         <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">

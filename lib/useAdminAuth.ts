@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-
-const ADMIN_TOKEN_KEY = "admin-auth-token";
+import { LS_TOKEN_KEY, LS_USER_TYPE_KEY, type UserType } from "@/lib/localStorageAdmin";
 
 type UseAdminAuthOptions = {
   requireAuth?: boolean;
@@ -16,14 +15,18 @@ export function useAdminAuth(options: UseAdminAuthOptions = {}) {
   const router = useRouter();
   const isCheckingAuth = false;
   const isAuthenticated =
-    typeof window !== "undefined" && Boolean(localStorage.getItem(ADMIN_TOKEN_KEY));
+    typeof window !== "undefined" && Boolean(localStorage.getItem(LS_TOKEN_KEY));
+  const userType: UserType | null =
+    typeof window !== "undefined"
+      ? (localStorage.getItem(LS_USER_TYPE_KEY) as UserType | null)
+      : null;
 
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
 
-    const hasToken = Boolean(localStorage.getItem(ADMIN_TOKEN_KEY));
+    const hasToken = Boolean(localStorage.getItem(LS_TOKEN_KEY));
 
     if (requireAuth && !hasToken && pathname !== "/admin/login") {
       router.replace(redirectTo);
@@ -39,9 +42,10 @@ export function useAdminAuth(options: UseAdminAuthOptions = {}) {
       return;
     }
 
-    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    localStorage.removeItem(LS_TOKEN_KEY);
+    localStorage.removeItem(LS_USER_TYPE_KEY);
     if ("cookieStore" in window) {
-      void window.cookieStore.delete({ name: ADMIN_TOKEN_KEY, path: "/" });
+      void window.cookieStore.delete({ name: LS_TOKEN_KEY, path: "/" });
     }
     router.push("/admin/login");
   }, [router]);
@@ -50,5 +54,6 @@ export function useAdminAuth(options: UseAdminAuthOptions = {}) {
     isAuthenticated,
     isCheckingAuth,
     logout,
+    userType,
   };
 }

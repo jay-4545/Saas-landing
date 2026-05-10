@@ -9,6 +9,13 @@ import {
   fetchTestimonials,
   updateTestimonial,
 } from "@/lib/api";
+import {
+  createLocalTestimonial,
+  deleteLocalTestimonial,
+  getLocalTestimonials,
+  isStaticUser,
+  updateLocalTestimonial,
+} from "@/lib/localStorageAdmin";
 
 type Testimonial = {
   _id: string;
@@ -36,8 +43,12 @@ export default function AdminTestimonialsPage() {
 
   const loadTestimonials = async () => {
     try {
-      const data = await fetchTestimonials();
-      setItems(data as Testimonial[]);
+      if (isStaticUser()) {
+        setItems(getLocalTestimonials() as Testimonial[]);
+      } else {
+        const data = await fetchTestimonials();
+        setItems(data as Testimonial[]);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load testimonials");
     } finally {
@@ -61,8 +72,8 @@ export default function AdminTestimonialsPage() {
   const openEditModal = (item: Testimonial) => {
     setForm({
       name: item.name,
-      role: item.role,
-      avatar: item.avatar,
+      role: item.role ?? "",
+      avatar: item.avatar ?? "",
       rating: item.rating,
       quote: item.quote,
     });
@@ -76,14 +87,25 @@ export default function AdminTestimonialsPage() {
       return;
     }
 
-    if (editingId) {
-      await updateTestimonial(editingId, form);
-      toast.success("Testimonial updated");
+    if (isStaticUser()) {
+      if (editingId) {
+        updateLocalTestimonial(editingId, form);
+        toast.success("Testimonial updated");
+      } else {
+        createLocalTestimonial(form);
+        toast.success("Testimonial added");
+      }
+      void loadTestimonials();
     } else {
-      await createTestimonial(form);
-      toast.success("Testimonial added");
+      if (editingId) {
+        await updateTestimonial(editingId, form);
+        toast.success("Testimonial updated");
+      } else {
+        await createTestimonial(form);
+        toast.success("Testimonial added");
+      }
+      await loadTestimonials();
     }
-    await loadTestimonials();
     setIsModalOpen(false);
   };
 
@@ -91,8 +113,13 @@ export default function AdminTestimonialsPage() {
     if (!window.confirm("Delete this testimonial?")) {
       return;
     }
-    await deleteTestimonial(id);
-    await loadTestimonials();
+    if (isStaticUser()) {
+      deleteLocalTestimonial(id);
+      void loadTestimonials();
+    } else {
+      await deleteTestimonial(id);
+      await loadTestimonials();
+    }
     toast.success("Testimonial deleted");
   };
 
@@ -176,13 +203,13 @@ export default function AdminTestimonialsPage() {
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
               />
               <input
-                value={form.role}
+                value={form.role ?? ""}
                 onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
                 placeholder="Role"
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
               />
               <input
-                value={form.avatar}
+                value={form.avatar ?? ""}
                 onChange={(event) => setForm((current) => ({ ...current, avatar: event.target.value }))}
                 placeholder="Avatar initials"
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
@@ -224,7 +251,7 @@ export default function AdminTestimonialsPage() {
               </button>
               <button
                 type="button"
-                onClick={handleSave}
+                onClick={() => void handleSave()}
                 className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
               >
                 Save
